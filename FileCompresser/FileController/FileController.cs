@@ -10,7 +10,6 @@ namespace FileCompresser
         public const string COMPRESSING_EXTENSION = "cod";
         public const string DECOMPRESSING_EXTENSION = "dec";
         public const string ECC_EXTENSION = "ecc";
-        public const string DECECC_EXTENSION = "coe";
 
         public static byte[] ReadFileContent(string fileName, string fileExtension)
         {            
