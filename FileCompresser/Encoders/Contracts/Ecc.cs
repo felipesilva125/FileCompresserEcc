@@ -297,7 +297,7 @@ namespace FileCompresser
             // first need to generate .cod from ecc
 
             Ecc a = new Ecc();
-            byte[] header = new byte[2] { 2, 0 };
+            byte[] header = new byte[2] { bytes[0], bytes[1] };
             byte crc8 = a.Crc(header);
 
             if (!crc8.Equals(bytes[2]))                        // check crc
