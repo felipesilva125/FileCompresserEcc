@@ -28,7 +28,7 @@
     - Depois, será gerado um arquivo.ecc, com a adição da codificação hamming(7, 4), a partir do arquivo.cod gerado anteriormente;
   * Decodifição:
     - Primeiro o arquivo.ecc será lido e acontecerá a decodificação do hamming(7, 4), gerando novamente o .cod, idêntico ao gerado na codificação;
-    - Depois, esse arquivo.cod será lido e decodificado de acordo com a codificação que você escolheu no começo.
+    - Depois, esse arquivo.cod será lido e decodificado de acordo com a codificação que você escolheu no começo, gerando o arquivo.dec que será idêntico ao arquivo original.
 
 #Limitações:
 - Não foi possível em algumas codificações chegar a um valor de tamanho do arquivo menor do que o original.
