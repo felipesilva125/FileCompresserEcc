@@ -1,6 +1,6 @@
-## Projeto FileCompresser ##
+## Projeto FileCompresserEcc ##
 
-### T1 - Teoria da informação ###
+### T2 - Teoria da informação ###
 
 - Alunos: Felipe Silva, Gabriel Wottawa e Gabriel Konrath
 
@@ -9,7 +9,7 @@
 
 #Intruções para compilar:
 - Clonar o projeto usando Git ou fazer um download da pasta;
-- Abrir o arquivo "FileCompresser.sln";
+- Abrir o arquivo "FileCompresserEcc.sln";
 - Abrir o projeto no Visual Studio;
 - Após o projeto estar aberto, clicar em "F5" para o mesmo ser iniciado;
 
