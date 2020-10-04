@@ -33,7 +33,7 @@ namespace FileCompresser
 
         private static void decompressFile(string fileName, IEncoder encoder)
         {
-            var fileContent = FileController.ReadFileContent(fileName, FileController.COMPRESSING_EXTENSION);            
+            var fileContent = FileController.ReadFileContent(fileName, FileController.ECC_EXTENSION);            
             encoder.Decode(fileContent, fileName);            
         }
     }

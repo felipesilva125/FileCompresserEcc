@@ -7,7 +7,7 @@ using System.Text;
 
 namespace FileCompresser
 {
-    public class Unary : IEncoder
+    public class Unary : Ecc, IEncoder
     {
         public void Encode(string content, string fileName)
         {
@@ -37,15 +37,18 @@ namespace FileCompresser
             var byteList = convertBoolsInBytes.ToList();
             byteList.Insert(0, 3);
             byteList.Insert(1, 0);
+
+            EncodeECC(convertBoolsInBytes, byteList.Take(2).ToArray(), path);
             File.WriteAllBytes(path, byteList.ToArray());
         }
 
         public void Decode(byte[] bytes, string fileName)
         {
             string path = Path.Combine(FileController.FILE_PATH, fileName);
+            DecodeECC(fileName, bytes);
+            var fileContent = FileController.ReadFileContent(fileName, FileController.COMPRESSING_EXTENSION);
             path = Path.ChangeExtension(path, FileController.DECOMPRESSING_EXTENSION);
-
-            bytes = bytes.Skip(2).ToArray();
+            bytes = fileContent.Skip(2).ToArray();
 
             var bits = new BitArray(bytes);
             var bools = new bool[bits.Length];

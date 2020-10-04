@@ -7,7 +7,7 @@ using System.Text;
 
 namespace FileCompresser
 {
-    public class Golomb : IEncoder
+    public class Golomb : Ecc, IEncoder
     {
         public void Encode(string content, string fileName)
         {
@@ -46,12 +46,15 @@ namespace FileCompresser
             byteList.Insert(0, 0); //indicator of the encoding type
             byteList.Insert(1, (byte)K); //value of divisor
 
+            EncodeECC(bytes, byteList.Take(2).ToArray(), path);
             File.WriteAllBytes(path, byteList.ToArray());            
         }
 
         public void Decode(byte[] bytes, string fileName)
         {
             string path = Path.Combine(FileController.FILE_PATH, fileName);
+            DecodeECC(fileName, bytes);
+            var newContent = FileController.ReadFileContent(fileName, FileController.COMPRESSING_EXTENSION);
             path = Path.ChangeExtension(path, FileController.DECOMPRESSING_EXTENSION);
 
             var K = bytes[1]; //get K from encoding
@@ -59,7 +62,7 @@ namespace FileCompresser
             using (var stream = File.Create(path))
             {
                 var fileContent = new StringBuilder();
-                bytes = bytes.Skip(2).ToArray();
+                bytes = newContent.Skip(2).ToArray();
 
                 var bits = new BitArray(bytes);
                 var bools = new bool[bits.Length];

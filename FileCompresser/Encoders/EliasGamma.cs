@@ -7,7 +7,7 @@ using System.Text;
 
 namespace FileCompresser
 {
-    public class EliasGamma : IEncoder
+    public class EliasGamma : Ecc, IEncoder
     {
         public void Encode(string content, string fileName)
         {
@@ -43,19 +43,22 @@ namespace FileCompresser
             var byteList = bytes.ToList();
             byteList.Insert(0, 1);
             byteList.Insert(1, 0);
-            
+
+            EncodeECC(bytes, byteList.Take(2).ToArray(), path);
             File.WriteAllBytes(path, byteList.ToArray());
         }
 
         public void Decode(byte[] bytes, string fileName)
         {
             string path = Path.Combine(FileController.FILE_PATH, fileName);
+            DecodeECC(fileName, bytes);
+            var newContent = FileController.ReadFileContent(fileName, FileController.COMPRESSING_EXTENSION);
             path = Path.ChangeExtension(path, FileController.DECOMPRESSING_EXTENSION);
 
             using (var fileStream = File.Create(path))
             {
                 var fileContent = new StringBuilder();                
-                bytes = bytes.Skip(2).ToArray();
+                bytes = newContent.Skip(2).ToArray();
 
                 var bits = new BitArray(bytes);
                 var bools = new bool[bits.Length];
