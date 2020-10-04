@@ -21,6 +21,14 @@
     - Ex.: "C:\Temp\alice29.cod"
   - Um arquivo decodificado com a extensão ".dec";
     - Ex.: "C:\Temp\alice29.dec"
-    
+
+#Funcionamento do projeto:
+  * Codificação:
+    - O arquivo será lido e codificado de acordo com a codificação que você escolher, gerando assim um arquivo.cod;
+    - Depois, será gerado um arquivo.ecc, com a adição da codificação hamming(7, 4), a partir do arquivo.cod gerado anteriormente;
+  * Decodifição:
+    - Primeiro o arquivo.ecc será lido e acontecerá a decodificação do hamming(7, 4), gerando novamente o .cod, idêntico ao gerado na codificação;
+    - Depois, esse arquivo.cod será lido e decodificado de acordo com a codificação que você escolheu no começo.
+
 #Limitações:
 - Nâo foi possível em algumas codificações chegar a um valor de tamanho do arquivo menor do que o original.
