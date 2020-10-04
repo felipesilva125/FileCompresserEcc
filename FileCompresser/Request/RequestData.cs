@@ -68,5 +68,28 @@ namespace FileCompresser
             foreach (int value in Enum.GetValues(typeof(CodificationType)))
                 yield return value.ToString();
         }
+
+        public static byte RequestDivisor()
+        {
+            do
+            {
+                Console.WriteLine("Enter the divisor:");
+                var divisor = Console.ReadLine();
+
+                if (!byte.TryParse(divisor, out var result) || result == 0 || !result.isPowerOfTwo())
+                {
+                    Console.WriteLine("Invalid value. Please try again.");
+                    continue;
+                }
+
+                return result;
+
+            } while (true);            
+        }
+
+        private static bool isPowerOfTwo(this byte input)
+        {
+            return (input & (input - 1)) == 0;
+        }
     }
 }

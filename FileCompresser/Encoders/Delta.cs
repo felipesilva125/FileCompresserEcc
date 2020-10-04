@@ -1,5 +1,5 @@
-﻿using System.Text;
-using System.IO;
+﻿using System.IO;
+using System.Text;
 
 namespace FileCompresser
 {
@@ -7,7 +7,7 @@ namespace FileCompresser
     {
         public void Encode(string content, string fileName)
         {
-            string path = fileName;
+            string path = Path.Combine(FileController.FILE_PATH, fileName);
             path = Path.ChangeExtension(path, FileController.COMPRESSING_EXTENSION);
 
             byte[] bytes = Encoding.UTF8.GetBytes(content);
@@ -31,18 +31,12 @@ namespace FileCompresser
             shiftRight[0] = 4; // Delta number
             shiftRight[1] = 0; // Only for Golomb K
 
-            // problem - some bytes dont have corresponding character
-            string result = Encoding.ASCII.GetString(shiftRight);
-            //BitArray bits = new BitArray(shiftRight);
             File.WriteAllBytes(path, shiftRight);
-            //File.WriteAllText(path, result);
-
-            //return result;
         }
 
         public void Decode(byte[] bytes, string fileName)
-        {
-            string path = fileName;
+        {            
+            string path = Path.Combine(FileController.FILE_PATH, fileName);
             path = Path.ChangeExtension(path, FileController.DECOMPRESSING_EXTENSION);
 
             byte[] arqBytes = bytes;
@@ -57,10 +51,7 @@ namespace FileCompresser
                 decoded[count++] = last;
             }
 
-            //string result = Encoding.ASCII.GetString(decoded);
-            //File.WriteAllText(path, result);
             File.WriteAllBytes(path, decoded);
-            //return result;
         }
     }
 }
