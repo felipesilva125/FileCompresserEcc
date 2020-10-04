@@ -112,7 +112,7 @@ namespace FileCompresser
         {
             string path = Path.Combine(FileController.FILE_PATH, fileName);
 
-            DecodeECC(fileName, path, bytes);
+            DecodeECC(path, bytes);
 
             var fileContent = FileController.ReadFileContent(fileName, FileController.COMPRESSING_EXTENSION);
 
