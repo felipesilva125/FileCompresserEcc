@@ -1,16 +1,16 @@
-﻿using System.IO;
-using System.Text;
+﻿using System.Text;
+using System.IO;
 
 namespace FileCompresser
 {
-    public class Delta : IEncoder
+    public class Delta : Ecc, IEncoder
     {
         public void Encode(string content, string fileName)
         {
             string path = Path.Combine(FileController.FILE_PATH, fileName);
             path = Path.ChangeExtension(path, FileController.COMPRESSING_EXTENSION);
 
-            byte[] bytes = Encoding.UTF8.GetBytes(content);
+            byte[] bytes = Encoding.ASCII.GetBytes(content);
 
             byte last = 0;
             byte original;
@@ -22,32 +22,41 @@ namespace FileCompresser
                 last = original;
             }
 
-            byte[] shiftRight = new byte[bytes.Length+2];
+            byte[] shiftRight = new byte[bytes.Length + 2];
             for (i = 0; i < bytes.Length; i++)
             {
                 shiftRight[(i + 2) % shiftRight.Length] = bytes[i];
             }
             
-            shiftRight[0] = 4; // Delta number
-            shiftRight[1] = 0; // Only for Golomb K
+            shiftRight[0] = 4;                  // Delta number
+            shiftRight[1] = 0;                  // Only for Golomb K
 
-            File.WriteAllBytes(path, shiftRight);
+            byte[] header = new byte[2] { shiftRight[0], shiftRight[1] };
+
+            File.WriteAllBytes(path, shiftRight);           // .cod
+
+            EncodeECC(bytes, header, path);
         }
 
         public void Decode(byte[] bytes, string fileName)
-        {            
+        {
             string path = Path.Combine(FileController.FILE_PATH, fileName);
+
+            DecodeECC(path, bytes);
+
             path = Path.ChangeExtension(path, FileController.DECOMPRESSING_EXTENSION);
 
-            byte[] arqBytes = bytes;
-            byte[] decoded = new byte[bytes.Length - 2];   // heading is not needed
+            var fileContent = FileController.ReadFileContent(fileName, FileController.COMPRESSING_EXTENSION);
+            
+            byte[] arqBytes = fileContent;
+            byte[] decoded = new byte[arqBytes.Length - 3];    // heading is not needed
 
             byte last = 0;
             int count = 0;
-            for (int i = 2; i < bytes.Length; i++)  // skip the first 2 elements (heading)
+            for (int i = 3; i < arqBytes.Length; i++)          // skip the first 3 elements (heading)
             {
-                bytes[i] += last;
-                last = bytes[i];
+                arqBytes[i] += last;
+                last = arqBytes[i];
                 decoded[count++] = last;
             }
 
