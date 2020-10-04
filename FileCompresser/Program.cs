@@ -14,7 +14,6 @@ namespace FileCompresser
                 var encoder = EncoderFactory.Create(codificationType);
 
                 compressFile(fileName, encoder);
-                //eccFile(fileName);                // tem que ter algo pra gerar ecc
                 decompressFile(fileName, encoder);
             }
             catch (Exception e)
