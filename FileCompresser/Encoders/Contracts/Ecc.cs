@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Collections;
+using System.Linq;
+using System.IO;
 
 namespace FileCompresser
 {
@@ -182,7 +185,7 @@ namespace FileCompresser
             bool p2 = Convert.ToBoolean((data2 + data3 + data4) % 2);
             bool p3 = Convert.ToBoolean((data1 + data3 + data4) % 2);
 
-            if (coding)                             // check if is coding or decoding
+            if (coding)                                                     // check if is coding or decoding
             {
                 BitArray p = new BitArray(3);
 
@@ -204,18 +207,18 @@ namespace FileCompresser
                 bool par2 = false;
                 bool par3 = false;
 
-                if (p1 == s[4])                            // check if parity bits are ok
+                if (p1 == s[4])                                         // check if parity bits are ok
                     par1 = true;
                 if (p2 == s[5])
                     par2 = true;
                 if (p3 == s[6])
                     par3 = true;
 
-                /*if (par1 && par2 && par3)               // all are ok
+                if (par1 && par2 && par3)                               // all are ok
                 {
                     return ham;
                 }
-                else if ((par1 == false) && par2 && (par3 == false))    // data1 error
+                else if (!par1 && par2 && !par3)                        // data1 error
                 {
                     if (s[0])                                           // s[0] is wrong, change bit
                         ham[0] = false;
@@ -223,7 +226,7 @@ namespace FileCompresser
                         ham[0] = true;
                     Console.WriteLine("Hamming Decoder ERROR: detected noise on hamming bits. Bit data1 fixed.");
                 }
-                else if ((par1 == false) && (par2 == false) && par3)    // data2 error
+                else if (!par1 && !par2 && par3)                        // data2 error
                 {
                     if (s[1])                                           // s[1] is wrong, change bit
                         ham[1] = false;
@@ -231,7 +234,7 @@ namespace FileCompresser
                         ham[1] = true;
                     Console.WriteLine("Hamming Decoder ERROR: detected noise on hamming bits. Bit data2 fixed.");
                 }
-                else if ((par1 == false) && (par2 == false) && (par3 == false)) // data3 error
+                else if (!par1 && !par2 && !par3)                       // data3 error
                 {
                     if (s[2])                                           // s[2] is wrong, change bit
                         ham[2] = false;
@@ -239,7 +242,7 @@ namespace FileCompresser
                         ham[2] = true;
                     Console.WriteLine("Hamming Decoder ERROR: detected noise on hamming bits. Bit data3 fixed.");
                 }
-                else if (par1 && (par2 == false) && (par3 == false))    // data4 error
+                else if (par1 && !par2 && !par3)                        // data4 error
                 {
                     if (s[3])                                           // s[3] is wrong, change bit
                         ham[3] = false;
@@ -249,11 +252,125 @@ namespace FileCompresser
                 }
                 else
                 {
-                    //Console.WriteLine("Hamming Decoder ERROR: more than one bit are wrong, no fixing available!");
-                }*/
+                    Console.WriteLine("Hamming Decoder ERROR: more than one bit are wrong, no fixing available!");
+                }
 
                 return ham;
             }
+        }
+
+        // write .ecc from .cod
+        public void EncodeECC(byte[] bytes, byte[] header, string filePath)
+        {
+            filePath = Path.ChangeExtension(filePath, FileController.ECC_EXTENSION);
+
+            Ecc a = new Ecc();
+            byte crc8 = a.Crc(header);
+            byte[] crcHeader = new byte[3] { header[0], header[1], crc8 };
+
+            BitArray hamming = a.Hamming(bytes);                // hamming bits
+            BitArray head = new BitArray(crcHeader);            // header bits
+            BitArray bits8 = new BitArray(8);                   // aux to perform bit to byte
+
+            int tam = (crcHeader.Length * 8) + hamming.Count;      // total number of bits
+            BitArray eccResult = new BitArray(tam);
+
+            int index = 0;
+            for (int i = 0; i < head.Length; i++)               // add header to eccResult BitArray
+            {
+                eccResult[index++] = head[i];
+            }
+            for (int i = index, j = 0; i < tam; i++, j++)        // add hamming codewords to eccResult BitArray
+            {
+                eccResult[index++] = hamming[j];
+            }
+
+            byte[] eccBytes = bitToByte(eccResult, tam);
+
+            File.WriteAllBytes(filePath, eccBytes);
+        }
+
+        // decode .ecc, check crc, write .cod
+        public void DecodeECC(string fileName, string filePath, byte[] bytes)
+        {
+            filePath = Path.ChangeExtension(filePath, FileController.COMPRESSING_EXTENSION);
+            // first need to generate .cod from ecc
+
+            Ecc a = new Ecc();
+            byte[] header = new byte[2] { 2, 0 };
+            byte crc8 = a.Crc(header);
+
+            if (!crc8.Equals(bytes[2]))                        // check crc
+            {
+                Console.WriteLine("CRC ERROR: header is incorrect or corrupted! Ending file compressor...");
+                return;
+            }
+            
+            byte[] bytesAux = new byte[bytes.Length - 3];      // remove heading
+            Buffer.BlockCopy(bytes, 3, bytesAux, 0, bytesAux.Length);
+
+            BitArray hammingBits = new BitArray(bytesAux);
+            BitArray hammingDec = a.HammingDec(hammingBits);
+
+            byte[] codedBytes = bitToByte(hammingDec, hammingDec.Length);
+            
+            byte[] shiftRight = new byte[codedBytes.Length + 3]; //codedBytes
+            for (int i = 0; i < codedBytes.Length; i++)
+            {
+                shiftRight[(i + 3) % shiftRight.Length] = codedBytes[i];
+            }
+
+            shiftRight[0] = 2;                                  // Fibonacci number
+            shiftRight[1] = 0;                                  // Only for Golomb K
+            shiftRight[2] = crc8;
+            File.WriteAllBytes(filePath, shiftRight);           // generate .cod
+        }
+
+        public byte[] bitToByte(BitArray bits, int tam)
+        {
+            BitArray bits8 = new BitArray(8);                       // aux to perform bit to byte
+
+            int numBytes = (int)Math.Ceiling(tam / 8d);             // begin perform bit to byte
+            int resto = tam % 8;
+            byte[] bitToByte = new byte[numBytes];
+
+            int count = 0;
+            int bitCount = 0;
+            for (int i = count; i <= bits.Length; i++)
+            {
+                if (i % 8 == 0 && i != 0)
+                {
+                    bits8.CopyTo(bitToByte, bitCount++);
+                    count = 0;
+                    if (i != bits.Length)
+                        bits8[count++] = bits[i];
+                }
+                else
+                {
+                    if (i != bits.Length)
+                        bits8[count++] = bits[i];
+                }
+            }
+            count = 0;
+            tam = bits.Count - 8;
+            if (resto != 0)
+            {
+                for (int i = 0; i < 8; i++)
+                {
+                    if (resto > 0)
+                    {
+                        bits8[count++] = bits[tam++];
+                        resto--;
+                    }
+                    else
+                    {
+                        bits8[count++] = false;
+                    }
+                }
+                bits8.CopyTo(bitToByte, bitCount);              // end
+            }
+
+            return bitToByte;
         }
     }
 }
