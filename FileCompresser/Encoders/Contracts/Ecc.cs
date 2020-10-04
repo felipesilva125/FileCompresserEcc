@@ -291,7 +291,7 @@ namespace FileCompresser
         }
 
         // decode .ecc, check crc, write .cod
-        public void DecodeECC(string fileName, string filePath, byte[] bytes)
+        public void DecodeECC(string filePath, byte[] bytes)
         {
             filePath = Path.ChangeExtension(filePath, FileController.COMPRESSING_EXTENSION);
             // first need to generate .cod from ecc
